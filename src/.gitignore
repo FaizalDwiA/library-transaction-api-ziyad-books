@@ -3,8 +3,6 @@
 /public/storage
 /storage/*.key
 /vendor
-.env
-.env.backup
 .phpunit.result.cache
 docker-compose.override.yml
 Homestead.json
@@ -13,3 +11,11 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+
+# .env biasanya di-ignore karena mengandung secret
+# Tapi untuk kemudahan testing project ini, saya izinkan commit .env
+# supaya reviewer bisa langsung jalankan Docker & migrate
+# Pastikan .env ini hanya untuk testing/development
+# Jika production, jangan commit .env yang berisi password asli
+# .env
+.env.backup
