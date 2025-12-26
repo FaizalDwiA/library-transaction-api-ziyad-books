@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Library Transaction API</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="library-transaction-api">Library Transaction API</h1>
+<p>RESTful API sederhana untuk sistem peminjaman buku perpustakaan<br>
+dibangun sebagai technical challenge Ziyadbooks.</p>
+<h2 id="-tech-stack">🚀 Tech Stack</h2>
+<ul>
+<li>PHP 7.4 (Laravel)</li>
+<li>MySQL 8</li>
+<li>Docker &amp; Docker Compose</li>
+</ul>
+<hr>
+<h2 id="-fitur-utama">📦 Fitur Utama</h2>
+<ul>
+<li>Peminjaman buku dengan <strong>database transaction (atomic)</strong></li>
+<li>Validasi stok buku dan kuota member</li>
+<li>Pencegahan race condition menggunakan <code>lockForUpdate</code></li>
+<li>Custom error response dengan <code>ziyad_error_code</code> dan <code>trace_id</code></li>
+</ul>
+<hr>
+<h2 id="️-cara-menjalankan-aplikasi">🛠️ Cara Menjalankan Aplikasi</h2>
+<h3 id="1-clone-repository">1. Clone Repository</h3>
+<pre><code class="language-bash">git <span class="hljs-built_in">clone</span> &lt;repository-url&gt;
+<span class="hljs-built_in">cd</span> library-api
+</code></pre>
+<h3 id="2-jalankan-docker">2. Jalankan Docker</h3>
+<pre><code class="language-bash">docker-compose up -d
+</code></pre>
+<h3 id="3-install-dependency--setup-app">3. Install Dependency &amp; Setup App</h3>
+<pre><code class="language-bash">docker-compose <span class="hljs-built_in">exec</span> app composer install
+docker-compose <span class="hljs-built_in">exec</span> app php artisan key:generate
+docker-compose <span class="hljs-built_in">exec</span> app php artisan migrate --seed
+</code></pre>
+<p>Aplikasi akan berjalan di:</p>
+<pre><code>http://localhost:8000
+</code></pre>
+<hr>
+<h2 id="-endpoint-api">📌 Endpoint API</h2>
+<h3 id="post-apiborrow">POST /api/borrow</h3>
+<p>Digunakan untuk meminjam buku.</p>
+<h4 id="request-body">Request Body</h4>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;user_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;book_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<hr>
+<h3 id="️-response-sukses">✔️ Response Sukses</h3>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Borrow success&quot;</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<hr>
+<h3 id="-response-gagal-contoh-stok-habis">❌ Response Gagal (Contoh: Stok Habis)</h3>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Stok buku habis&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;ziyad_error_code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ZYD-ERR-001&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;trace_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;a1b2c3d4-xxxx&quot;</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<hr>
+<h2 id="-testing">🧪 Testing</h2>
+<p>Testing dilakukan menggunakan Postman dengan dua skenario:</p>
+<ol>
+<li>Peminjaman berhasil</li>
+<li>Peminjaman gagal karena stok habis</li>
+</ol>
+<p>Detail pengujian ditunjukkan pada video demo.</p>
+<hr>
+<h2 id="-video-demo">🎥 Video Demo</h2>
+<p>📌 Link Video Demo:
+<strong>(isi link video di sini)</strong></p>
+<p>Video menampilkan:</p>
+<ul>
+<li>Menjalankan aplikasi dengan <code>docker-compose up</code></li>
+<li>Testing API sukses &amp; gagal menggunakan Postman</li>
+</ul>
+<hr>
+<h2 id="-catatan-teknis">📝 Catatan Teknis</h2>
+<ul>
+<li>Transaction logic ditempatkan di service layer untuk menjaga controller tetap tipis</li>
+<li>Database transaction digunakan untuk menjamin konsistensi data</li>
+<li>Error response mengikuti kontrak khusus sesuai instruksi challenge</li>
+</ul>
+
+            
+            
+        </body>
+        </html>
