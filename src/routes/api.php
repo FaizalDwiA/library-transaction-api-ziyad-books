@@ -20,4 +20,10 @@ use App\Http\Controllers\BorrowTransactionController;
 //     return $request->user();
 // });
 
-Route::post('/borrow', [BorrowTransactionController::class, 'store']);
+// Route::post('/borrow', [BorrowTransactionController::class, 'store']);
+
+// Route POST /borrow
+// Middleware 'auth:sanctum' dipasang untuk memastikan hanya user yang login yang bisa mengakses endpoint ini
+// Pendekatan ini dipilih untuk mengamankan API dari akses tidak sah
+Route::middleware('auth:sanctum')->post('/borrow', [BorrowTransactionController::class, 'store']);
+

@@ -13,12 +13,6 @@ class BorrowTransactionFactory extends Factory
      */
     public function definition()
     {
-        return [
-            'user_id' => 1,
-            'book_id' => 1,
-            'borrowed_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
+        
     }
 }

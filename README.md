@@ -12,9 +12,10 @@ dibangun sebagai technical challenge Ziyadbooks.
 
 ## 📦 Fitur Utama
 - Peminjaman buku dengan **database transaction (atomic)**
-- Validasi stok buku dan kuota member
+- Validasi **stok buku** dan **kuota member**
 - Pencegahan race condition menggunakan `lockForUpdate`
 - Custom error response dengan `ziyad_error_code` dan `trace_id`
+- Logging transaksi berhasil dan gagal untuk tracking user
 
 ---
 
@@ -35,8 +36,10 @@ docker-compose up -d
 ### 3. Install Dependency & Setup App
 
 ```bash
-docker-compose exec app composer install
-docker-compose exec app php artisan key:generate
+cd src
+composer install
+cd ..
+docker-compose up -d --build
 docker-compose exec app php artisan migrate --seed
 ```
 
@@ -48,11 +51,41 @@ http://localhost:8000
 
 ---
 
+## 🔑 Membuat Token untuk User
+
+### Buka Tinker:
+
+```bash
+docker-compose exec app php artisan tinker
+```
+
+### Buat token untuk user pertama:
+
+```php
+$user = App\Models\User::first();
+$token = $user->createToken('postman-test')->plainTextToken;
+echo $token;
+```
+
+Gunakan token ini di Postman/Insomnia pada header:
+
+```
+Authorization: Bearer <token>
+```
+
+---
+
 ## 📌 Endpoint API
 
 ### POST /api/borrow
 
 Digunakan untuk meminjam buku.
+
+#### Header:
+
+```
+Authorization: Bearer <token>
+```
 
 #### Request Body
 
@@ -75,13 +108,23 @@ Digunakan untuk meminjam buku.
 
 ---
 
-### ❌ Response Gagal (Contoh: Stok Habis)
+### ❌ Response Gagal Stok Buku Habis
 
 ```json
 {
   "message": "Stok buku habis",
   "ziyad_error_code": "ZYD-ERR-001",
   "trace_id": "a1b2c3d4-xxxx"
+}
+```
+
+### ❌ Response Gagal Kuota Member Habis
+
+```json
+{
+  "message": "Kuota peminjaman habis",
+  "ziyad_error_code": "ZYD-ERR-002",
+  "trace_id": "163ca1ba-ba9a-4b2d-9f35-7778c170f755"
 }
 ```
 
@@ -92,7 +135,7 @@ Digunakan untuk meminjam buku.
 Testing dilakukan menggunakan Postman dengan dua skenario:
 
 1. Peminjaman berhasil
-2. Peminjaman gagal karena stok habis
+2. Peminjaman gagal karena stok habis atau kuota habis
 
 Detail pengujian ditunjukkan pada video demo.
 
@@ -101,17 +144,23 @@ Detail pengujian ditunjukkan pada video demo.
 ## 🎥 Video Demo
 
 📌 Link Video Demo:
-**(isi link video di sini)**
+Link Video
 
 Video menampilkan:
 
 * Menjalankan aplikasi dengan `docker-compose up`
-* Testing API sukses & gagal menggunakan Postman
+* Testing API sukses & gagal menggunakan Postman dengan token
 
 ---
 
 ## 📝 Catatan Teknis
 
-* Transaction logic ditempatkan di service layer untuk menjaga controller tetap tipis
-* Database transaction digunakan untuk menjamin konsistensi data
-* Error response mengikuti kontrak khusus sesuai instruksi challenge
+* **Service Layer**: Transaction logic ditempatkan di service layer (`BorrowService`) untuk menjaga controller tetap tipis (Single Responsibility Principle)
+* **Database Transaction**: Digunakan agar operasi peminjaman **atomic** (jika gagal di tengah, rollback otomatis)
+* **Race Condition**: `lockForUpdate` digunakan untuk mencegah dua request meminjam buku yang sama secara bersamaan
+* **Error Handling**: Custom error response dengan `ziyad_error_code` dan `trace_id` untuk memudahkan tracking
+* **Logging**: Semua transaksi gagal dicatat di log Laravel (`storage/logs/laravel.log`) dengan trace_id untuk debugging
+* **Validasi Input**: Menggunakan Form Request (`StoreBorrowTransactionRequest`) untuk memisahkan validasi dari controller
+* **Authentication**: Semua endpoint API dilindungi token (Laravel Sanctum)
+
+---
