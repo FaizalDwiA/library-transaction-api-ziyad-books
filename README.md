@@ -1,12 +1,12 @@
 # Library Transaction API
 
-RESTful API sederhana untuk sistem peminjaman buku perpustakaan  
-dibangun sebagai technical challenge Ziyadbooks.
+RESTful API sederhana untuk sistem peminjaman buku perpustakaan dibangun sebagai technical challenge Ziyadbooks.
 
 ## 🚀 Tech Stack
 - PHP 7.4 (Laravel)
 - MySQL 8
 - Docker & Docker Compose
+- Composer (harus diinstall di local machine untuk setup Laravel)
 
 ---
 
@@ -24,29 +24,29 @@ dibangun sebagai technical challenge Ziyadbooks.
 ### 1. Clone Repository
 ```bash
 git clone <repository-url>
-cd library-api
+cd library-transaction-api-ziyad-books
 ```
 
-### 2. Jalankan Docker
-
-```bash
-docker-compose up -d
-```
-
-### 3. Install Dependency & Setup App
+### 2. Jalankan Docker & Install Dependency & Setup App
 
 ```bash
 cd src
 composer install
 cd ..
-docker-compose up -d --build
+docker-compose up -d
 docker-compose exec app php artisan migrate --seed
 ```
 
-Aplikasi akan berjalan di:
+### Aplikasi Laravel akan berjalan di:
 
 ```
 http://localhost:8000
+```
+
+### Phpmyadmin akan berjalan di:
+
+```
+http://localhost:8080
 ```
 
 ---
@@ -159,7 +159,7 @@ Video menampilkan:
 * **Database Transaction**: Digunakan agar operasi peminjaman **atomic** (jika gagal di tengah, rollback otomatis)
 * **Race Condition**: `lockForUpdate` digunakan untuk mencegah dua request meminjam buku yang sama secara bersamaan
 * **Error Handling**: Custom error response dengan `ziyad_error_code` dan `trace_id` untuk memudahkan tracking
-* **Logging**: Semua transaksi gagal dicatat di log Laravel (`storage/logs/laravel.log`) dengan trace_id untuk debugging
+* **Logging**: Semua transaksi gagal dan berhasil dicatat di log Laravel (`storage/logs/laravel.log`) dengan trace_id untuk debugging
 * **Validasi Input**: Menggunakan Form Request (`StoreBorrowTransactionRequest`) untuk memisahkan validasi dari controller
 * **Authentication**: Semua endpoint API dilindungi token (Laravel Sanctum)
 
